@@ -1,18 +1,6 @@
-# adhocore/jsonc
+# vodafon/jsonc
 
-[![Latest Version](https://img.shields.io/github/release/adhocore/jsonc.svg?style=flat-square)](https://github.com/adhocore/jsonc/releases)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
-[![Go Report](https://goreportcard.com/badge/github.com/adhocore/jsonc)](https://goreportcard.com/report/github.com/adhocore/jsonc)
-[![Test](https://github.com/adhocore/jsonc/actions/workflows/test-action.yml/badge.svg)](https://github.com/adhocore/jsonc/actions/workflows/test-action.yml)
-[![Codecov](https://img.shields.io/codecov/c/github/adhocore/jsonc/main.svg?style=flat-square)](https://codecov.io/gh/adhocore/jsonc)
-[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Lightweight+fast+and+deps+free+commented+json+parser+for+Golang&url=https://github.com/adhocore/jsonc&hashtags=go,golang,parser,json,json-comment)
-[![Support](https://img.shields.io/static/v1?label=Support&message=%E2%9D%A4&logo=GitHub)](https://github.com/sponsors/adhocore)
-<!-- [![Donate 15](https://img.shields.io/badge/donate-paypal-blue.svg?style=flat-square&label=donate+15)](https://www.paypal.me/ji10/15usd)
-[![Donate 25](https://img.shields.io/badge/donate-paypal-blue.svg?style=flat-square&label=donate+25)](https://www.paypal.me/ji10/25usd)
-[![Donate 50](https://img.shields.io/badge/donate-paypal-blue.svg?style=flat-square&label=donate+50)](https://www.paypal.me/ji10/50usd) -->
-
-
-- Lightweight [JSON5](https://json5.org) pre-processor library for Go. See [#1](https://github.com/adhocore/jsonc/issues/1)
+- Lightweight [JSON5](https://json5.org) pre-processor library for Go.
 - Parses JSON5 input to JSON that Go understands. (Think of it as a superset to JSON.)
 - Makes possible to have comment in any form of JSON data.
 - Supported comments: single line `// comment` or multi line `/* comment */`.
@@ -30,7 +18,7 @@
 ---
 ### Example
 
-This is [example](./examples/test.json5) of the JSON that you can parse with `adhocore/jsonc`:
+This is [example](./examples/test.json5) of the JSON that you can parse with `vodafon/jsonc`:
 
 ```json5
 /*start*/
@@ -80,12 +68,10 @@ but this one is continued in same line due to backslash escape",
 /*end*/
 ```
 
-Find jsonc in [pkg.go.dev](https://pkg.go.dev/github.com/adhocore/jsonc).
-
 ## Installation
 
 ```sh
-go get -u github.com/adhocore/jsonc
+go get -u github.com/vodafon/jsonc
 ```
 
 ## Usecase
@@ -101,7 +87,7 @@ Import and init library:
 ```go
 import (
 	"fmt"
-	"github.com/adhocore/jsonc"
+	"github.com/vodafon/jsonc"
 )
 
 j := jsonc.New()
@@ -125,7 +111,7 @@ json := []byte(`{
 
 var out map[string]interface{}
 
-j.Unmarshall(json, &out)
+j.Unmarshal(json, &out)
 fmt.Printf("%+v\n", out)
 ```
 
@@ -170,7 +156,7 @@ thus always maintaining the sync.
 ```go
 import (
     "fmt"
-    "github.com/adhocore/jsonc"
+    "github.com/vodafon/jsonc"
 )
 
 var dest map[string]interface{}
@@ -190,11 +176,6 @@ if err != nil {
 > &copy; [MIT](./LICENSE) | 2022-2099, Jitendra Adhikari
 
 ---
-### Other projects
-My other golang projects you might find interesting and useful:
+### Credits
 
-- [**gronx**](https://github.com/adhocore/gronx) - Lightweight, fast and dependency-free Cron expression parser (due checker, next run finder), task scheduler and/or daemon for Golang (tested on v1.13 and above) and standalone usage.
-- [**urlsh**](https://github.com/adhocore/urlsh) - URL shortener and bookmarker service with UI, API, Cache, Hits Counter and forwarder using postgres and redis in backend, bulma in frontend; has [web](https://urlssh.xyz) and cli client.
-- [**fast**](https://github.com/adhocore/fast) - Check your internet speed with ease and comfort right from the terminal.
-- [**goic**](https://github.com/adhocore/goic) - Go Open ID Connect, is OpenID connect client library for Golang, supports the Authorization Code Flow of OpenID Connect specification.
-- [**chin**](https://github.com/adhocore/chin) - A Golang command line tool to show a spinner as user waits for some long running jobs to finish.
+Inspired by and forked from [adhocore/jsonc](https://github.com/adhocore/jsonc).
