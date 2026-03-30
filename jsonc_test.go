@@ -83,6 +83,35 @@ func TestCachedDecoder(t *testing.T) {
 			}
 		})
 	})
+	t.Run("nonexistent source", func(t *testing.T) {
+		if err := cd.Decode("./examples/nonexistent.json5", &val); err == nil {
+			t.Error("expected error for nonexistent file, got nil")
+		}
+	})
+	t.Run("custom extension", func(t *testing.T) {
+		cd2 := NewCachedDecoder(".custom.json")
+		os.Remove("./examples/test1.custom.json")
+		if err := cd2.Decode(file, &val); err != nil {
+			t.Errorf("[%v] decode should not error, got %#v", file, err)
+		}
+		os.Remove("./examples/test1.custom.json")
+	})
+}
+
+func TestHexadecimalEdgeCases(t *testing.T) {
+	j := New()
+	t.Run("empty hex", func(t *testing.T) {
+		result := j.StripS(`{"a": 0x}`)
+		if result != `{"a": 0}` {
+			t.Errorf("expected {\"a\": 0}, got %s", result)
+		}
+	})
+	t.Run("large hex", func(t *testing.T) {
+		result := j.StripS(`{"a": 0xFFFFFFFF}`)
+		if result != `{"a": 4294967295}` {
+			t.Errorf("expected {\"a\": 4294967295}, got %s", result)
+		}
+	})
 }
 
 func testcases() map[string]Case {
@@ -184,4 +213,27 @@ func testcases() map[string]Case {
 			}`,
 		},
 	}
+}
+
+func FuzzStripS(f *testing.F) {
+	f.Add(`{"a":1,"b":2}`)
+	f.Add(`{"a":1,// comment` + "\n" + `"b":2}`)
+	f.Add(`{"a":1,/* comment */"b":2}`)
+	f.Add(`{'a': 'b',}`)
+	f.Add(`{a: 1, b: 2}`)
+	f.Add(`{"hex": 0xff}`)
+	f.Add(`{"n": .5, "m": 2.}`)
+	f.Add(`{"a": +10}`)
+	f.Add(`[1, 2, 3,,]`)
+	f.Add(``)
+	f.Add(`////`)
+	f.Add(`/**/`)
+	f.Add(`"unclosed string`)
+	f.Add(`{{{`)
+	f.Add(`]]]`)
+
+	f.Fuzz(func(t *testing.T, input string) {
+		j := New()
+		_ = j.StripS(input)
+	})
 }

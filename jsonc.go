@@ -3,13 +3,15 @@ package jsonc
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-// Jsonc is the structure for parsing json with comments
+// Jsonc is the structure for parsing json with comments.
+// A Jsonc instance is NOT safe for concurrent use. Each goroutine should create
+// its own instance via New(), or access must be serialized externally.
 type Jsonc struct {
 	index    int    // current index position in source data
 	comment  uint   // the type of comment: eithher 1 for // OR 2 for /*
@@ -41,43 +43,45 @@ var comma = regexp.MustCompile(`(?:,+)(\s*)$`)
 
 // StripS strips comments and trailing commas from input string
 func (j *Jsonc) StripS(data string) string {
-	var oldprev, prev, char, next, s string
+	var oldprev, prev, char, next string
+	var sb strings.Builder
 
 	j.reset()
 	j.len = len(data)
+	sb.Grow(j.len)
 	quote, quoted := "", false
 
 	for j.index < j.len {
 		oldprev, prev, char, next = j.getSegments(data, prev)
 
-		// If value starts with 0x, parse as hexadecimal
 		if j.isNonStringValue(char, "0") && (next == "x" || next == "X") {
-			s += j.hexadecimal(data)
+			sb.WriteString(j.hexadecimal(data))
 			continue
 		}
 
 		quote, quoted = j.quoteKey(char, quoted)
-		s += quote
+		sb.WriteString(quote)
 
-		// Trim trailing commas at the end of array or object
 		if j.comment == 0 && !j.inStr && ((j.inArr && char == "]") || (j.inObj && char == "}")) {
-			s = comma.ReplaceAllString(s, `$1`)
+			trimmed := comma.ReplaceAllString(sb.String(), `$1`)
+			sb.Reset()
+			sb.WriteString(trimmed)
 		}
 
 		j.checkArrayObject(char)
 
-		// Append char as is (or it's compliment pair) if inside string or outside comment
 		if j.inString(prev, char, next, oldprev) || j.outsideComment(char, next) {
-			s += j.compliment(prev, char, next)
+			sb.WriteString(j.compliment(prev, char, next))
 			continue
 		}
 
-		// Wipe out trailing whitespaces around comment
 		if j.hasCommentEnded(char, next) && char == "\n" {
-			s = strings.TrimRight(s, "\r\n\t ") + char
+			trimmed := strings.TrimRight(sb.String(), "\r\n\t ") + char
+			sb.Reset()
+			sb.WriteString(trimmed)
 		}
 	}
-	return s
+	return sb.String()
 }
 
 // Unmarshal strips and parses the json byte array
@@ -87,7 +91,7 @@ func (j *Jsonc) Unmarshal(jsonb []byte, v interface{}) error {
 
 // UnmarshalFile strips and parses the json content from file
 func (j *Jsonc) UnmarshalFile(file string, v interface{}) error {
-	jsonb, err := ioutil.ReadFile(file)
+	jsonb, err := os.ReadFile(file)
 	if err != nil {
 		return err
 	}
@@ -121,7 +125,8 @@ func (j *Jsonc) isNonStringValue(char, chars string) bool {
 	return !j.inStr && j.comment == 0 && strings.ContainsAny(char, chars)
 }
 
-// hexadecimal consumes hex (0-9a-fA-F) chars and converts to decimal string
+// hexadecimal consumes hex (0-9a-fA-F) chars and converts to decimal string.
+// Returns "0" if the hex string is empty or cannot be parsed.
 func (j *Jsonc) hexadecimal(data string) string {
 	j.index++
 	hexa := ""
@@ -133,7 +138,13 @@ func (j *Jsonc) hexadecimal(data string) string {
 		hexa += char
 		j.index++
 	}
-	dec, _ := strconv.ParseInt(hexa, 16, 32)
+	if hexa == "" {
+		return "0"
+	}
+	dec, err := strconv.ParseInt(hexa, 16, 64)
+	if err != nil {
+		return "0"
+	}
 	return fmt.Sprintf("%d", dec)
 }
 

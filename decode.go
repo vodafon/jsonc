@@ -2,7 +2,6 @@ package jsonc
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,18 +36,29 @@ func (fd *CachedDecoder) Decode(file string, v interface{}) error {
 	// Update if not exist, or source file modified
 	update := !exist || stat.ModTime() != cstat.ModTime()
 	if !update {
-		jsonb, _ := ioutil.ReadFile(cache)
+		jsonb, err := os.ReadFile(cache)
+		if err != nil {
+			return err
+		}
 		return json.Unmarshal(jsonb, v)
 	}
 
-	jsonb, _ := ioutil.ReadFile(file)
+	jsonb, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
 	cfile, err := os.Create(cache)
 	if err != nil {
 		return err
 	}
+	defer cfile.Close()
 
 	jsonb = fd.jsonc.Strip(jsonb)
-	cfile.Write(jsonb)
-	os.Chtimes(cache, stat.ModTime(), stat.ModTime())
+	if _, err := cfile.Write(jsonb); err != nil {
+		return err
+	}
+	if err := os.Chtimes(cache, stat.ModTime(), stat.ModTime()); err != nil {
+		return err
+	}
 	return json.Unmarshal(jsonb, v)
 }
