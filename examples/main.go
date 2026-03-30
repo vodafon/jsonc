@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/adhocore/jsonc"
+	"github.com/vodafon/jsonc"
 )
 
 func main() {

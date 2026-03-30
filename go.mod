@@ -1,3 +1,3 @@
-module github.com/adhocore/jsonc
+module github.com/vodafon/jsonc
 
 go 1.13
